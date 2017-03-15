@@ -1,0 +1,21 @@
+# Mac preview files
+.DS_Store
+
+# IntelliJ project files
+*.ipr
+*.iws
+.idea
+
+# Target directories
+target/
+build/
+.gradle/
+
+# Build metadata
+build-progess.meta
+build.meta
+*.log
+
+# Binary
+*.gif
+dp-apipoc-client
