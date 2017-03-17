@@ -5,6 +5,7 @@ import (
 	"image/color"
 	"image/gif"
 	"io"
+	"io/ioutil"
 	"math"
 	"math/rand"
 	"os"
@@ -18,6 +19,7 @@ const (
 )
 
 func main() {
+	Init(ioutil.Discard, os.Stdout, os.Stdout, os.Stderr)
 	lissajous(os.Stdout)
 }
 
