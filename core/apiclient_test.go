@@ -135,7 +135,7 @@ func TestStatus(t *testing.T) {
 	assert.Equal(t, M3(200, expectedJson, nil), M3(client.Status()))
 }
 
-func TestGetDatasetWhenNoStartingIndexAndLimitSpecified(t *testing.T) {
+func TestGetDatasets(t *testing.T) {
 	datasetJson := []byte(`{
 		  "startIndex": 0,
 		  "itemsPerPage": 1,
@@ -182,7 +182,7 @@ func TestGetDatasetWhenNoStartingIndexAndLimitSpecified(t *testing.T) {
 
 	httpmock.RegisterResponder(
 		"GET",
-		"https://api.develop.onsdigital.co.uk/dataset/UKEA?limit=1&start=0",
+		"https://api.develop.onsdigital.co.uk/dataset?limit=1&start=0",
 		func(req *http.Request) (*http.Response, error) {
 			resp, err := httpmock.NewJsonResponse(200, respBody)
 			if err != nil {
@@ -233,5 +233,276 @@ func TestGetDatasetWhenNoStartingIndexAndLimitSpecified(t *testing.T) {
 
 	client := NewApiClient()
 
-	assert.Equal(t, M3(200, expectedJson, nil), M3(client.GetDataset("UKEA", 0, 1)))
+	assert.Equal(t, M3(200, expectedJson, nil), M3(client.GetDatasets(0, 1)))
+}
+
+func TestGetDatasetsForId(t *testing.T) {
+	datasetJson := []byte(`{
+		  "startIndex": 0,
+		  "itemsPerPage": 1,
+		  "totalItems": 35,
+		  "items": [
+		    {
+		      "uri": "/businessindustryandtrade/business/businessinnovation/datasets/scienceandtechnologyclassification/current",
+		      "type": "dataset",
+		      "description": {
+		        "title": "Science and Technology Classification",
+		        "summary": "The full list of UK Standard Industrial Classification of Economic Activities 2007 (SIC07) codes and comparison between different classifications, with identifiers to categorise all 5-digit SIC07 codes according to the Science and Technology classification.",
+		        "keywords": [],
+		        "metaDescription": "The full list of UK Standard Industrial Classification of Economic Activities 2007 (SIC07) codes and comparison between different classifications, with identifiers to categorise all 5-digit SIC07 codes according to the Science and Technology classification.",
+		        "nationalStatistic": false,
+		        "contact": {
+		          "email": "james.p.harris@ons.gsi.gov.uk",
+		          "name": "James P Harris",
+		          "telephone": "+44 (0) 1329 444 656"
+		        },
+		        "releaseDate": "2015-02-13T00:00:00Z",
+		        "nextRelease": "",
+		        "edition": "Current",
+		        "datasetId": "",
+		        "unit": "",
+		        "preUnit": "",
+		        "source": ""
+		      },
+		      "searchBoost": []
+		    }
+		  ]
+		}`)
+
+	var respBody interface{}
+	e := json.Unmarshal(datasetJson, &respBody)
+
+	if e != nil {
+		panic(e)
+	}
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	config.Host = "https://api.develop.onsdigital.co.uk"
+
+	httpmock.RegisterResponder(
+		"GET",
+		"https://api.develop.onsdigital.co.uk/dataset/ukea?limit=1&start=0",
+		func(req *http.Request) (*http.Response, error) {
+			resp, err := httpmock.NewJsonResponse(200, respBody)
+			if err != nil {
+				return httpmock.NewStringResponse(500, ""), nil
+			}
+			return resp, nil
+		},
+	)
+
+	logging.Init(ioutil.Discard, os.Stdout, os.Stdout, os.Stderr)
+
+	dt, er := time.Parse(time.RFC3339, "2015-02-13T00:00:00Z")
+	if er != nil {
+		panic(er)
+	}
+
+	expectedJson := model.Metadata{
+		StartIndex:   0,
+		ItemsPerPage: 1,
+		TotalItems:   35,
+		Items: &[]model.Record{
+			{
+				RecordUri:  "/businessindustryandtrade/business/businessinnovation/datasets/scienceandtechnologyclassification/current",
+				RecordType: "dataset",
+				Description: &model.Description{
+					Title:             "Science and Technology Classification",
+					Summary:           "The full list of UK Standard Industrial Classification of Economic Activities 2007 (SIC07) codes and comparison between different classifications, with identifiers to categorise all 5-digit SIC07 codes according to the Science and Technology classification.",
+					Keywords:          []string{},
+					MetaDescription:   "The full list of UK Standard Industrial Classification of Economic Activities 2007 (SIC07) codes and comparison between different classifications, with identifiers to categorise all 5-digit SIC07 codes according to the Science and Technology classification.",
+					NationalStatistic: false,
+					Contact: &model.Contact{
+						Email:     "james.p.harris@ons.gsi.gov.uk",
+						Name:      "James P Harris",
+						Telephone: "+44 (0) 1329 444 656",
+					},
+					ReleaseDate: dt,
+					NextRelease: "",
+					Edition:     "Current",
+					DatasetId:   "",
+					DataUnit:    "",
+					PreUnit:     "",
+					Source:      "",
+				},
+				SearchBoost: []string{},
+			},
+		},
+	}
+
+	client := NewApiClient()
+
+	assert.Equal(t, M3(200, expectedJson, nil), M3(client.GetDatasetsForId("ukea", 0, 1)))
+}
+
+func TestGetDatasetsForTimeseries(t *testing.T) {
+	datasetJson := []byte(`{}`)
+
+	var respBody interface{}
+	e := json.Unmarshal(datasetJson, &respBody)
+
+	if e != nil {
+		panic(e)
+	}
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	config.Host = "https://api.develop.onsdigital.co.uk"
+
+	httpmock.RegisterResponder(
+		"GET",
+		"https://api.develop.onsdigital.co.uk/timeseries/nmcu/dataset?limit=1&start=0",
+		func(req *http.Request) (*http.Response, error) {
+			resp, err := httpmock.NewJsonResponse(200, respBody)
+			if err != nil {
+				return httpmock.NewStringResponse(500, ""), nil
+			}
+			return resp, nil
+		},
+	)
+
+	logging.Init(ioutil.Discard, os.Stdout, os.Stdout, os.Stderr)
+
+	client := NewApiClient()
+
+	assert.Equal(t, M3(200, model.Metadata{}, nil), M3(client.GetDatasetsForTimeseries("nmcu", 0, 1)))
+}
+
+func TestGetTimeseries(t *testing.T) {
+	datasetJson := []byte(`{}`)
+
+	var respBody interface{}
+	e := json.Unmarshal(datasetJson, &respBody)
+
+	if e != nil {
+		panic(e)
+	}
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	config.Host = "https://api.develop.onsdigital.co.uk"
+
+	httpmock.RegisterResponder(
+		"GET",
+		"https://api.develop.onsdigital.co.uk/timeseries?limit=1&start=0",
+		func(req *http.Request) (*http.Response, error) {
+			resp, err := httpmock.NewJsonResponse(200, respBody)
+			if err != nil {
+				return httpmock.NewStringResponse(500, ""), nil
+			}
+			return resp, nil
+		},
+	)
+
+	logging.Init(ioutil.Discard, os.Stdout, os.Stdout, os.Stderr)
+
+	client := NewApiClient()
+
+	assert.Equal(t, M3(200, model.Metadata{}, nil), M3(client.GetTimeseries(0, 1)))
+}
+
+func TestGetTimeseriesForId(t *testing.T) {
+	datasetJson := []byte(`{}`)
+
+	var respBody interface{}
+	e := json.Unmarshal(datasetJson, &respBody)
+
+	if e != nil {
+		panic(e)
+	}
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	config.Host = "https://api.develop.onsdigital.co.uk"
+
+	httpmock.RegisterResponder(
+		"GET",
+		"https://api.develop.onsdigital.co.uk/timeseries/nmcu?limit=1&start=0",
+		func(req *http.Request) (*http.Response, error) {
+			resp, err := httpmock.NewJsonResponse(200, respBody)
+			if err != nil {
+				return httpmock.NewStringResponse(500, ""), nil
+			}
+			return resp, nil
+		},
+	)
+
+	logging.Init(ioutil.Discard, os.Stdout, os.Stdout, os.Stderr)
+
+	client := NewApiClient()
+
+	assert.Equal(t, M3(200, model.Metadata{}, nil), M3(client.GetTimeseriesForId("nmcu", 0, 1)))
+}
+
+func TestGetTimeseriesForDataset(t *testing.T) {
+	datasetJson := []byte(`{}`)
+
+	var respBody interface{}
+	e := json.Unmarshal(datasetJson, &respBody)
+
+	if e != nil {
+		panic(e)
+	}
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	config.Host = "https://api.develop.onsdigital.co.uk"
+
+	httpmock.RegisterResponder(
+		"GET",
+		"https://api.develop.onsdigital.co.uk/dataset/UKEA/timeseries?limit=1&start=0",
+		func(req *http.Request) (*http.Response, error) {
+			resp, err := httpmock.NewJsonResponse(200, respBody)
+			if err != nil {
+				return httpmock.NewStringResponse(500, ""), nil
+			}
+			return resp, nil
+		},
+	)
+
+	logging.Init(ioutil.Discard, os.Stdout, os.Stdout, os.Stderr)
+
+	client := NewApiClient()
+
+	assert.Equal(t, M3(200, model.Metadata{}, nil), M3(client.GetTimeseriesForDataset("UKEA", 0, 1)))
+}
+
+func TestGetDataset(t *testing.T) {
+	datasetJson := []byte(`{}`)
+
+	var respBody interface{}
+	e := json.Unmarshal(datasetJson, &respBody)
+
+	if e != nil {
+		panic(e)
+	}
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	config.Host = "https://api.develop.onsdigital.co.uk"
+
+	httpmock.RegisterResponder(
+		"GET",
+		"https://api.develop.onsdigital.co.uk/dataset/UKEA/timeseries/nmcu",
+		func(req *http.Request) (*http.Response, error) {
+			resp, err := httpmock.NewJsonResponse(200, respBody)
+			if err != nil {
+				return httpmock.NewStringResponse(500, ""), nil
+			}
+			return resp, nil
+		},
+	)
+
+	logging.Init(ioutil.Discard, os.Stdout, os.Stdout, os.Stderr)
+
+	client := NewApiClient()
+
+	assert.Equal(t, M3(200, model.Record{}, nil), M3(client.GetDataset("UKEA", "nmcu")))
 }
