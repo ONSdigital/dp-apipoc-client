@@ -23,7 +23,7 @@ type ApiClient interface {
 	Search(term string, start int, limit int) (int, model.Metadata, error)
 	getMetadata(path string, params map[string]string) (int, model.Metadata, error)
 
-	//	GetData(url string) (model.Response, error)
+	GetData(datasetId string, timeseriesId string) (int, model.Data, error)
 }
 
 func NewApiClient() ApiClient {
@@ -181,6 +181,35 @@ func (s *apiService) getMetadata(path string, params map[string]string) (int, mo
 	}
 
 	var body model.Metadata
+	err := json.Unmarshal(bodyBytes, &body)
+	if err != nil {
+		logging.Error.Println(err)
+		panic(err)
+	}
+
+	return resp.Success.StatusCode, body, nil
+}
+
+func (s *apiService) GetData(datasetId string, timeseriesId string) (int, model.Data, error) {
+	path := buildPath([]string{"/dataset/", datasetId, "/timeseries/", timeseriesId, "/data"})
+
+	resp := s.httpClient.Get(path, nil)
+
+	if resp.Failure != nil {
+		logging.Error.Println(resp.Failure)
+
+		return resp.Success.StatusCode, model.Data{}, resp.Failure
+	}
+
+	defer resp.Success.Body.Close()
+
+	bodyBytes, e := ioutil.ReadAll(resp.Success.Body)
+	if e != nil {
+		logging.Error.Println(e)
+		panic(e)
+	}
+
+	var body model.Data
 	err := json.Unmarshal(bodyBytes, &body)
 	if err != nil {
 		logging.Error.Println(err)

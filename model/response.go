@@ -62,14 +62,14 @@ type Record struct {
 
 type Description struct {
 	Title             string    `json:"title"`
-	Summary           string    `json:"summary"`
-	Keywords          []string  `json:"keywords"`
-	MetaDescription   string    `json:"metaDescription"`
-	NationalStatistic bool      `json:"nationalStatistic"`
+	Summary           string    `json:"summary,omitempty"`
+	Keywords          []string  `json:"keywords,omitempty"`
+	MetaDescription   string    `json:"metaDescription,omitempty"`
+	NationalStatistic bool      `json:"nationalStatistic,omitempty"`
 	Contact           *Contact  `json:"contact"`
 	ReleaseDate       time.Time `json:"releaseDate,string"`
 	NextRelease       string    `json:"nextRelease"`
-	Edition           string    `json:"edition"`
+	Edition           string    `json:"edition,omitempty"`
 	DatasetId         string    `json:"datasetId"`
 	DatasetUri        string    `json:"datasetUri"`
 	CDID              string    `json:"cdid,omitempty"`
@@ -87,4 +87,39 @@ type Contact struct {
 	Email     string `json:"email"`
 	Name      string `json:"name"`
 	Telephone string `json:"telephone"`
+}
+
+type Data struct {
+	Years            *[]Period    `json:"years"`
+	Quarters         *[]Period    `json:"quarters"`
+	Months           *[]Period    `json:"months"`
+	RelatedDatasets  *[]Relation  `json:"relatedDatasets"`
+	RelatedDocuments *[]Relation  `json:"relatedDocuments"`
+	RelatedData      *[]Relation  `json:"relatedData,omitempty"`
+	Versions         *[]Version   `json:"versions"`
+	DataType         string       `json:"type"`
+	DataUri          string       `json:"uri"`
+	Description      *Description `json:"description"`
+}
+
+type Period struct {
+	PeriodDate    string    `json:"date"`
+	Value         string    `json:"value"`
+	Label         string    `json:"label"`
+	PeriodYear    string    `json:"year"`
+	PeriodMonth   string    `json:"month"`
+	Quarter       string    `json:"quarter"`
+	SourceDataset string    `json:"sourceDataset"`
+	UpdateDate    time.Time `json:"updateDate"`
+}
+
+type Relation struct {
+	RelationUri string `json:"uri"`
+}
+
+type Version struct {
+	VersionUri       string    `json:"uri"`
+	UpdateDate       time.Time `json:"updateDate"`
+	CorrectionNotice string    `json:"correctionNotice"`
+	Label            string    `json:"label"`
 }

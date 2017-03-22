@@ -540,3 +540,206 @@ func TestSearchMetadata(t *testing.T) {
 
 	assert.Equal(t, M3(200, model.Metadata{}, nil), M3(client.Search("travel", 3, 7)))
 }
+
+func TestGetData(t *testing.T) {
+	datasetJson := []byte(`{
+		  "years": [
+		    {
+		      "date": "1987",
+		      "value": "5119",
+		      "label": "1987",
+		      "year": "1987",
+		      "month": "",
+		      "quarter": "",
+		      "sourceDataset": "UKEA",
+		      "updateDate": "2016-03-31T08:30:00Z"
+		    },
+		    {
+		      "date": "2015",
+		      "value": "798",
+		      "label": "2015",
+		      "year": "2015",
+		      "month": "",
+		      "quarter": "",
+		      "sourceDataset": "UKEA",
+		      "updateDate": "2016-12-23T00:00:00Z"
+		    }
+		  ],
+		  "quarters": [
+		    {
+		      "date": "1987 Q1",
+		      "value": "1136",
+		      "label": "1987 Q1",
+		      "year": "1987",
+		      "month": "",
+		      "quarter": "Q1",
+		      "sourceDataset": "UKEA",
+		      "updateDate": "2016-03-31T08:30:00Z"
+		    }
+		  ],
+		  "months": [],
+		  "relatedDatasets": [
+		    {
+		      "uri": "/economy/grossdomesticproductgdp/datasets/unitedkingdomeconomicaccounts"
+		    }
+		  ],
+		  "relatedDocuments": [],
+		  "versions": [
+		    {
+		      "uri": "/economy/governmentpublicsectorandtaxes/publicsectorfinance/timeseries/cpcm/ukea/previous/v1",
+		      "updateDate": "2016-03-31T08:30:00Z",
+		      "correctionNotice": "",
+		      "label": "v1"
+		    },
+		    {
+		      "uri": "/economy/governmentpublicsectorandtaxes/publicsectorfinance/timeseries/cpcm/ukea/previous/v2",
+		      "updateDate": "2016-06-30T08:30:00Z",
+		      "correctionNotice": "",
+		      "label": "v2"
+		    }
+		  ],
+		  "type": "timeseries",
+		  "uri": "/economy/governmentpublicsectorandtaxes/publicsectorfinance/timeseries/cpcm/ukea",
+		  "description": {
+		    "title": "Public corporations Net Borrowing (B.9g): £m CPNSA                      ",
+		    "contact": {
+		      "email": "sector.accounts@ons.gsi.gov.uk",
+		      "name": "Michael Rizzo",
+		      "telephone": "+44 (0)1633 456366"
+		    },
+		    "releaseDate": "2016-12-23T00:00:00Z",
+		    "nextRelease": "31 March 2017",
+		    "datasetId": "UKEA",
+		    "datasetUri": "/economy/grossdomesticproductgdp/datasets/unitedkingdomeconomicaccounts",
+		    "cdid": "CPCM",
+		    "unit": "m",
+		    "preUnit": "£",
+		    "source": "",
+		    "date": "2016 Q3",
+		    "number": "171",
+		    "sampleSize": "0"
+		  }
+		}`)
+
+	var respBody interface{}
+	e := json.Unmarshal(datasetJson, &respBody)
+
+	if e != nil {
+		panic(e)
+	}
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	config.Host = "https://api.develop.onsdigital.co.uk"
+
+	httpmock.RegisterResponder(
+		"GET",
+		"https://api.develop.onsdigital.co.uk/dataset/ukea/timeseries/cpcm/data",
+		func(req *http.Request) (*http.Response, error) {
+			resp, err := httpmock.NewJsonResponse(200, respBody)
+			if err != nil {
+				return httpmock.NewStringResponse(500, ""), nil
+			}
+			return resp, nil
+		},
+	)
+
+	logging.Init(ioutil.Discard, os.Stdout, os.Stdout, os.Stderr)
+
+	dt1, er1 := time.Parse(time.RFC3339, "2016-03-31T08:30:00Z")
+	if er1 != nil {
+		panic(er1)
+	}
+	dt2, er2 := time.Parse(time.RFC3339, "2016-12-23T00:00:00Z")
+	if er2 != nil {
+		panic(er2)
+	}
+	dt3, er3 := time.Parse(time.RFC3339, "2016-06-30T08:30:00Z")
+	if er3 != nil {
+		panic(er3)
+	}
+
+	expectedJson := model.Data{
+		Years: &[]model.Period{
+			{
+				PeriodDate:    "1987",
+				Value:         "5119",
+				Label:         "1987",
+				PeriodYear:    "1987",
+				PeriodMonth:   "",
+				Quarter:       "",
+				SourceDataset: "UKEA",
+				UpdateDate:    dt1,
+			},
+			{
+				PeriodDate:    "2015",
+				Value:         "798",
+				Label:         "2015",
+				PeriodYear:    "2015",
+				PeriodMonth:   "",
+				Quarter:       "",
+				SourceDataset: "UKEA",
+				UpdateDate:    dt2,
+			},
+		},
+		Quarters: &[]model.Period{
+			{
+				PeriodDate:    "1987 Q1",
+				Value:         "1136",
+				Label:         "1987 Q1",
+				PeriodYear:    "1987",
+				PeriodMonth:   "",
+				Quarter:       "Q1",
+				SourceDataset: "UKEA",
+				UpdateDate:    dt1,
+			},
+		},
+		Months: &[]model.Period{},
+		RelatedDatasets: &[]model.Relation{
+			{
+				RelationUri: "/economy/grossdomesticproductgdp/datasets/unitedkingdomeconomicaccounts",
+			},
+		},
+		RelatedDocuments: &[]model.Relation{},
+		Versions: &[]model.Version{
+			{
+				VersionUri:       "/economy/governmentpublicsectorandtaxes/publicsectorfinance/timeseries/cpcm/ukea/previous/v1",
+				UpdateDate:       dt1,
+				CorrectionNotice: "",
+				Label:            "v1",
+			},
+			{
+				VersionUri:       "/economy/governmentpublicsectorandtaxes/publicsectorfinance/timeseries/cpcm/ukea/previous/v2",
+				UpdateDate:       dt3,
+				CorrectionNotice: "",
+				Label:            "v2",
+			},
+		},
+		DataType: "timeseries",
+		DataUri:  "/economy/governmentpublicsectorandtaxes/publicsectorfinance/timeseries/cpcm/ukea",
+		Description: &model.Description{
+			Title: "Public corporations Net Borrowing (B.9g): £m CPNSA                      ",
+			Contact: &model.Contact{
+				Email:     "sector.accounts@ons.gsi.gov.uk",
+				Name:      "Michael Rizzo",
+				Telephone: "+44 (0)1633 456366",
+			},
+			ReleaseDate: dt2,
+			NextRelease: "31 March 2017",
+			DatasetId:   "UKEA",
+			DatasetUri:  "/economy/grossdomesticproductgdp/datasets/unitedkingdomeconomicaccounts",
+			CDID:        "CPCM",
+			DataUnit:    "m",
+			PreUnit:     "£",
+			Source:      "",
+			DataDate:    "2016 Q3",
+			DataNumber:  "171",
+			SampleSize:  "0",
+		},
+	}
+
+	client := NewApiClient()
+
+	assert.Equal(t, M3(200, expectedJson, nil), M3(client.GetData("ukea", "cpcm")))
+}
