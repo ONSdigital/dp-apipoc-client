@@ -20,7 +20,9 @@ type ApiClient interface {
 	GetTimeseriesForId(timeseriesId string, start int, limit int) (int, model.Metadata, error)
 	GetTimeseriesForDataset(datasetId string, start int, limit int) (int, model.Metadata, error)
 	GetDataset(datasetId string, timeseriesId string) (int, model.Record, error)
-	getMetadata(path string, start int, limit int) (int, model.Metadata, error)
+	Search(term string, start int, limit int) (int, model.Metadata, error)
+	getMetadata(path string, params map[string]string) (int, model.Metadata, error)
+
 	//	GetData(url string) (model.Response, error)
 }
 
@@ -72,35 +74,55 @@ func (s *apiService) Status() (int, model.Status, error) {
 }
 
 func (s *apiService) GetDatasets(start int, limit int) (int, model.Metadata, error) {
-	return s.getMetadata("/dataset", start, limit)
+	params := make(map[string]string)
+	params["start"] = strconv.Itoa(start)
+	params["limit"] = strconv.Itoa(limit)
+
+	return s.getMetadata("/dataset", params)
 }
 
 func (s *apiService) GetDatasetsForId(datasetId string, start int, limit int) (int, model.Metadata, error) {
 	path := buildPath([]string{"/dataset/", datasetId})
+	params := make(map[string]string)
+	params["start"] = strconv.Itoa(start)
+	params["limit"] = strconv.Itoa(limit)
 
-	return s.getMetadata(path, start, limit)
+	return s.getMetadata(path, params)
 }
 
 func (s *apiService) GetDatasetsForTimeseries(timeseriesId string, start int, limit int) (int, model.Metadata, error) {
 	path := buildPath([]string{"/timeseries/", timeseriesId, "/dataset"})
+	params := make(map[string]string)
+	params["start"] = strconv.Itoa(start)
+	params["limit"] = strconv.Itoa(limit)
 
-	return s.getMetadata(path, start, limit)
+	return s.getMetadata(path, params)
 }
 
 func (s *apiService) GetTimeseries(start int, limit int) (int, model.Metadata, error) {
-	return s.getMetadata("/timeseries", start, limit)
+	params := make(map[string]string)
+	params["start"] = strconv.Itoa(start)
+	params["limit"] = strconv.Itoa(limit)
+
+	return s.getMetadata("/timeseries", params)
 }
 
 func (s *apiService) GetTimeseriesForId(timeseriesId string, start int, limit int) (int, model.Metadata, error) {
 	path := buildPath([]string{"/timeseries/", timeseriesId})
+	params := make(map[string]string)
+	params["start"] = strconv.Itoa(start)
+	params["limit"] = strconv.Itoa(limit)
 
-	return s.getMetadata(path, start, limit)
+	return s.getMetadata(path, params)
 }
 
 func (s *apiService) GetTimeseriesForDataset(datasetId string, start int, limit int) (int, model.Metadata, error) {
 	path := buildPath([]string{"/dataset/", datasetId, "/timeseries"})
+	params := make(map[string]string)
+	params["start"] = strconv.Itoa(start)
+	params["limit"] = strconv.Itoa(limit)
 
-	return s.getMetadata(path, start, limit)
+	return s.getMetadata(path, params)
 }
 
 func (s *apiService) GetDataset(datasetId string, timeseriesId string) (int, model.Record, error) {
@@ -132,11 +154,16 @@ func (s *apiService) GetDataset(datasetId string, timeseriesId string) (int, mod
 	return resp.Success.StatusCode, body, nil
 }
 
-func (s *apiService) getMetadata(path string, start int, limit int) (int, model.Metadata, error) {
+func (s *apiService) Search(term string, start int, limit int) (int, model.Metadata, error) {
 	params := make(map[string]string)
+	params["q"] = term
 	params["start"] = strconv.Itoa(start)
 	params["limit"] = strconv.Itoa(limit)
 
+	return s.getMetadata("/search", params)
+}
+
+func (s *apiService) getMetadata(path string, params map[string]string) (int, model.Metadata, error) {
 	resp := s.httpClient.Get(path, params)
 
 	if resp.Failure != nil {

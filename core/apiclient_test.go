@@ -506,3 +506,37 @@ func TestGetDataset(t *testing.T) {
 
 	assert.Equal(t, M3(200, model.Record{}, nil), M3(client.GetDataset("UKEA", "nmcu")))
 }
+
+func TestSearchMetadata(t *testing.T) {
+	datasetJson := []byte(`{}`)
+
+	var respBody interface{}
+	e := json.Unmarshal(datasetJson, &respBody)
+
+	if e != nil {
+		panic(e)
+	}
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	config.Host = "https://api.develop.onsdigital.co.uk"
+
+	httpmock.RegisterResponder(
+		"GET",
+		"https://api.develop.onsdigital.co.uk/search?limit=7&q=travel&start=3",
+		func(req *http.Request) (*http.Response, error) {
+			resp, err := httpmock.NewJsonResponse(200, respBody)
+			if err != nil {
+				return httpmock.NewStringResponse(500, ""), nil
+			}
+			return resp, nil
+		},
+	)
+
+	logging.Init(ioutil.Discard, os.Stdout, os.Stdout, os.Stderr)
+
+	client := NewApiClient()
+
+	assert.Equal(t, M3(200, model.Metadata{}, nil), M3(client.Search("travel", 3, 7)))
+}

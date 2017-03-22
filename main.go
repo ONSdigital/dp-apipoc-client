@@ -9,6 +9,8 @@ import (
 	"math"
 	"math/rand"
 	"os"
+
+	"github.com/ONSdigital/dp-apipoc-client/logging"
 )
 
 var palette = []color.Color{color.White, color.Black}
@@ -19,7 +21,8 @@ const (
 )
 
 func main() {
-	Init(ioutil.Discard, os.Stdout, os.Stdout, os.Stderr)
+	logging.Init(ioutil.Discard, os.Stdout, os.Stdout, os.Stderr)
+
 	lissajous(os.Stdout)
 }
 
