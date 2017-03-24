@@ -51,12 +51,6 @@
 			"revisionTime": "2017-02-06T15:57:36Z"
 		},
 		{
-			"checksumSHA1": "kTQ58DAXtXAHAjGYSj0yNnfW9k0=",
-			"path": "github.com/namsral/flag",
-			"revision": "7fa59bdb55485001d702d9b6e15367cdf26bfde8",
-			"revisionTime": "2016-12-28T15:00:38Z"
-		},
-		{
 			"checksumSHA1": "LuFv4/jlrmFNnDb/5SCSEPAM9vU=",
 			"path": "github.com/pmezard/go-difflib/difflib",
 			"revision": "792786c7400a136282c1664665ae0a8db921c6c2",
