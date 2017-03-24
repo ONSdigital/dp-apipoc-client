@@ -22,9 +22,9 @@ Remember to update the [README](README.md) and [CHANGELOG](CHANGELOG.md) files.
 An overview of the configuration options available, either as a table of
 environment variables, or with a link to a configuration guide.
 
-| Environment variable | Default | Description
-| -------------------- | ------- | -----------
-| BIND_ADDR            | :8080   | The host and port to bind to
+| Environment variable | Default                              | Description
+| -------------------- | ------------------------------------ | -----------------------
+| API_SERVER_ROOT      | https://api.develop.onsdigital.co.uk | The API host's root URL
 
 ### Contributing
 
