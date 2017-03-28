@@ -11,3 +11,4 @@ outputs:
 - name: test-report
 run:
   path: ./unit-tests.sh
+  dir: .
