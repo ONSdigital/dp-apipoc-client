@@ -8,6 +8,7 @@ image_resource:
 inputs:
 - name: project-src
   path: project/src/github.com/ONSdigital/dp-apipoc-client
+outputs:
 - name: test-report
 run:
   path: project/src/github.com/ONSdigital/dp-apipoc-client/ci-unit-tests.sh
