@@ -1,0 +1,15 @@
+---
+resources:
+- name: project-src
+  type: git
+  source:
+    uri: https://github.com/ONSdigital/dp-apipoc-client.git
+    branch: develop
+
+jobs:
+- name: unit-tests-job
+  plan:
+  - get: project-src
+    trigger: true
+  - task: Run unit tests
+    file: project-src/unit-tests-task.yml
